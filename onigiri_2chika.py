@@ -19,8 +19,8 @@ if src_full is None:
 # 中心からトリミング
 center_x = src_full.shape[1] // 2
 center_y = src_full.shape[0] // 2
-crop_width = 3840
-#crop_width = 1200
+#crop_width = 3840
+crop_width = 1200
 crop_height = 2160
 
 x = max(center_x - crop_width // 2, 0)
@@ -102,16 +102,47 @@ nLabels_filtered, labels_filtered = cv2.connectedComponents(filtered)
 label_display = cv2.cvtColor(filtered, cv2.COLOR_GRAY2BGR)
 src_with_labels = src.copy()
 
+# 画像の縦方向のピクセル数
+image_height_pixels = src.shape[0]
+image_width_pixels = src.shape[1]
+
+# 1ピクセルあたりの物理的な長さ（mm）
+mm_per_pixel = 240 / image_height_pixels  # 縦の長さが2400mmの場合
+
+# 画像の中心座標
+center_x = image_width_pixels // 2
+center_y = image_height_pixels // 2
+
+# cx, cyの座標を物理単位に変換し、中心を原点とした相対座標を出力
 for i in range(1, nLabels_filtered):
     mask = (labels_filtered == i).astype(np.uint8)
     m = cv2.moments(mask)
     if m["m00"] != 0:
         cx = int(m["m10"] / m["m00"])
         cy = int(m["m01"] / m["m00"])
+        
+        # 中心を原点とした相対座標
+        relative_cx = cx - center_x
+        relative_cy = -1*(cy - center_y)
+        
+        # 相対座標を物理単位に変換
+        relative_cx_mm = relative_cx * mm_per_pixel
+        relative_cy_mm = relative_cy * mm_per_pixel
+        
+        print(f"Label {i}: relative_cx = {relative_cx} px ({relative_cx_mm:.2f} mm), relative_cy = {relative_cy} px ({relative_cy_mm:.2f} mm)")
+        
+        # ラベル表示
         cv2.putText(label_display, "*", (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 3.0, (0, 0, 255), 2)
         cv2.putText(label_display, str(i), (cx + 50, cy), cv2.FONT_HERSHEY_SIMPLEX, 3.0, (0, 0, 255), 10)
         cv2.putText(src_with_labels, "*", (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 3.0, (0, 255, 0), 2)
         cv2.putText(src_with_labels, str(i), (cx + 50, cy), cv2.FONT_HERSHEY_SIMPLEX, 3.0, (0, 0, 255), 10)
+        
+        # 座標値を描画
+        coord_text = f"({relative_cx_mm:.2f}, {relative_cy_mm:.2f})"
+        cv2.putText(src_with_labels, coord_text, (cx + 50, cy + 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 0), 2)
+
+# 原点に〇を描画
+cv2.circle(src_with_labels, (center_x, center_y), 20, (0, 0, 0), 3)  # 青色の円を描画
 
 # --- 表示と保存 ---
 def show_resized(win_name, img, idx):
