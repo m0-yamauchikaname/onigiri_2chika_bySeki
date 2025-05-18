@@ -5,7 +5,7 @@ import os
 import csv  # 先頭付近に追加
 from ultralytics import YOLO
 script_dir = os.path.dirname(os.path.abspath(__file__))
-yolo_model_path = os.path.join(script_dir, "yolo_model", "0517.pt")
+yolo_model_path = os.path.join(script_dir, "yolo_model", "0516v2.pt")
 output_csv_path = os.path.join(script_dir, "Table","output.csv")
 # ../yolo_model/0518.pt
 if not os.path.exists(yolo_model_path):
@@ -18,8 +18,8 @@ model = YOLO(yolo_model_path)
 start = time.time()
 
 # --- 0. 入力画像読み込み ---
-#input_folder_name= "input_images1\sample4.jpg"
-input_folder_name= "input_images2\sample12.jpg"
+input_folder_name= "input_images1\sample6.jpg"
+#input_folder_name= "input_images2\sample12.jpg"
 folder_path = os.path.join(script_dir, input_folder_name)
 src_full = cv2.imread(folder_path, cv2.IMREAD_COLOR)
 if src_full is None:
@@ -44,7 +44,7 @@ image_height_pixels = src.shape[0]
 image_width_pixels = src.shape[1]
 
 # 1ピクセルあたりの物理的な長さ（mm）
-mm_per_pixel = 240 / image_height_pixels  # 縦の長さが2400mmの場合
+mm_per_pixel = 380 / image_height_pixels  # 縦の長さが380mmの場合
 # 画像の中心座標
 center_x = image_width_pixels // 2
 center_y = image_height_pixels // 2
@@ -67,7 +67,12 @@ if boxes is not None and len(boxes) > 0:
         x1, y1, x2, y2 = xyxy
         cx = (x1 + x2) // 2
         cy = (y1 + y2) // 2
-        centers.append((label, cx, cy, x1, x2, y1, y2, conf))
+        # バウンディングボックスの面積を計算
+        area = (x2 - x1) * (y2 - y1)
+        # バウンディングボックス描画
+        cv2.rectangle(result_img, (x1, y1), (x2, y2), (0, 255, 255*label), 2)
+        if(label == 0):
+            centers.append((label, cx, cy, conf))
     # yの降順でソート
     centers.sort(key=lambda x: x[2])
 
@@ -77,7 +82,7 @@ if boxes is not None and len(boxes) > 0:
         writer.writerow(["NUMBER", "CRT_POS_X", "CRT_POS_Y"])
 
         for idx, center in enumerate(centers):
-            label, ABScenter_x, ABScenter_y, x1, x2, y1, y2, conf = center
+            label, ABScenter_x, ABScenter_y, conf = center
             if label == 0 or label == 1:
                 found = True
                 # カメラからの相対座標を計算
@@ -86,10 +91,6 @@ if boxes is not None and len(boxes) > 0:
                 # 相対座標をmm単位に変換
                 center_x_mm = RELcenter_x * mm_per_pixel
                 center_y_mm = RELcenter_y * mm_per_pixel
-                # バウンディングボックスの面積を計算
-                area = (x2 - x1) * (y2 - y1)
-                # バウンディングボックス描画
-                cv2.rectangle(result_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 # バウンディングボックスの中心座標とcountを描画
                 cv2.putText(result_img, f"x: {center_x_mm:.2f} y:{center_y_mm:.2f} ", (ABScenter_x, ABScenter_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
                 cv2.putText(result_img, f"count: {idx}", (ABScenter_x, ABScenter_y - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
