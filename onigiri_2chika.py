@@ -7,8 +7,8 @@ import os
 start = time.time()
 
 # --- 0. 入力画像読み込み ---
-#input_folder_name= "input_images1\sample7.jpg"
-input_folder_name= "input_images2\sample12.jpg"
+#input_folder_name= "input_images1\sample1.jpg"
+input_folder_name= "input_images2\sample13.jpg"
 script_dir = os.path.dirname(os.path.abspath(__file__))
 folder_path = os.path.join(script_dir, input_folder_name)
 src_full = cv2.imread(folder_path, cv2.IMREAD_COLOR)

@@ -5,7 +5,7 @@ import os
 import csv  # 先頭付近に追加
 from ultralytics import YOLO
 script_dir = os.path.dirname(os.path.abspath(__file__))
-yolo_model_path = os.path.join(script_dir, "yolo_model", "0516v2.pt")
+yolo_model_path = os.path.join(script_dir, "yolo_model", "0520.pt")
 output_csv_path = os.path.join(script_dir, "Table","output.csv")
 # ../yolo_model/0518.pt
 if not os.path.exists(yolo_model_path):
@@ -18,7 +18,7 @@ model = YOLO(yolo_model_path)
 start = time.time()
 
 # --- 0. 入力画像読み込み ---
-input_folder_name= "input_images1\sample6.jpg"
+input_folder_name= "input_images3\sample3.jpg"
 #input_folder_name= "input_images2\sample12.jpg"
 folder_path = os.path.join(script_dir, input_folder_name)
 src_full = cv2.imread(folder_path, cv2.IMREAD_COLOR)
@@ -29,7 +29,7 @@ if src_full is None:
 center_x = src_full.shape[1] // 2
 center_y = src_full.shape[0] // 2
 #crop_width = 3840
-crop_width = 1200
+crop_width = 700
 crop_height = 2160
 
 x = max(center_x - crop_width // 2, 0)
